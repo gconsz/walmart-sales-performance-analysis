@@ -1,1 +1,124 @@
+SELECT * FROM `smart-rope-473422-t2.Walmart.walmart_raw` LIMIT 1000
+
+
+SELECT
+  COUNT(*) AS total_rows
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_raw`;
+
+# Check Missing Values
+
+SELECT
+  COUNT(*) AS total_rows,
+  COUNTIF(Store IS NULL) AS missing_store,
+  COUNTIF(Date IS NULL) AS missing_date,
+  COUNTIF(Weekly_Sales IS NULL) AS missing_sales,
+  COUNTIF(Holiday_Flag IS NULL) AS missing_holiday,
+  COUNTIF(Temperature IS NULL) AS missing_temperature,
+  COUNTIF(Fuel_Price IS NULL) AS missing_fuel_price,
+  COUNTIF(CPI IS NULL) AS missing_cpi,
+  COUNTIF(Unemployment IS NULL) AS missing_unemployment
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_raw`;
+
+# Check for Duplicates
+
+SELECT
+  Store,
+  Date,
+  COUNT(*) AS duplicate_count
+FROM `smart-rope-473422-t2.Walmart.walmart_raw`
+GROUP BY Store, Date
+HAVING COUNT(*) > 1
+ORDER BY duplicate_count DESC;
+
+# Check for invalid numerical values
+SELECT
+  COUNT(*) AS total_rows,
+  COUNTIF(Weekly_Sales < 0) AS negative_sales,
+  COUNTIF(Weekly_Sales = 0) AS zero_sales,
+  COUNTIF(Fuel_Price <= 0) AS invalid_fuel_prices,
+  COUNTIF(CPI <= 0) AS invalid_cpi,
+  COUNTIF(Unemployment < 0) AS negative_unemployment,
+  MIN(Weekly_Sales) AS minimum_sales,
+  MAX(Weekly_Sales) AS maximum_sales
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_raw`;
+
+#Check Dates
+
+SELECT
+  CAST(`Date` AS STRING) AS original_date,
+  COALESCE(
+    SAFE_CAST(`Date` AS DATE),
+    SAFE.PARSE_DATE(
+      '%d-%m-%Y',
+      TRIM(CAST(`Date` AS STRING))
+    )
+  ) AS converted_date
+FROM `smart-rope-473422-t2.Walmart.walmart_raw`
+LIMIT 20;
+
+#Validate Holiday Flag
+
+SELECT
+  COUNT(*) AS total_rows,
+  COUNT(DISTINCT Store) AS total_stores,
+  COUNT(DISTINCT CAST(`Date` AS STRING))
+    AS total_weeks,
+  COUNTIF(
+    LOWER(TRIM(CAST(Holiday_Flag AS STRING)))
+    NOT IN ('0', '1', 'true', 'false')
+  ) AS invalid_holiday_flags
+FROM `smart-rope-473422-t2.Walmart.walmart_raw`;
+
+#Create cleaned table
+
+CREATE OR REPLACE VIEW
+  `smart-rope-473422-t2.Walmart.walmart_clean`
+AS
+
+WITH cleaned AS (
+  SELECT
+    SAFE_CAST(Store AS INT64) AS store_id,
+
+    COALESCE(
+      SAFE_CAST(`Date` AS DATE),
+      SAFE.PARSE_DATE(
+        '%d-%m-%Y',
+        TRIM(CAST(`Date` AS STRING))
+      )
+    ) AS week_date,
+
+    SAFE_CAST(Weekly_Sales AS NUMERIC)
+      AS weekly_sales,
+
+    CASE
+      WHEN LOWER(TRIM(CAST(Holiday_Flag AS STRING)))
+        IN ('1', 'true') THEN TRUE
+      WHEN LOWER(TRIM(CAST(Holiday_Flag AS STRING)))
+        IN ('0', 'false') THEN FALSE
+      ELSE NULL
+    END AS is_holiday,
+
+    SAFE_CAST(Temperature AS FLOAT64)
+      AS temperature_f,
+
+    SAFE_CAST(Fuel_Price AS NUMERIC)
+      AS fuel_price,
+
+    SAFE_CAST(CPI AS FLOAT64) AS cpi,
+
+    SAFE_CAST(Unemployment AS FLOAT64)
+      AS unemployment_rate
+
+  FROM `smart-rope-473422-t2.Walmart.walmart_raw`
+)
+
+SELECT
+  *,
+  EXTRACT(YEAR FROM week_date) AS sales_year,
+  EXTRACT(MONTH FROM week_date) AS sales_month,
+  DATE_TRUNC(week_date, MONTH) AS month_start
+FROM cleaned;
 
