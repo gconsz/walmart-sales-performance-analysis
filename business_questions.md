@@ -17,7 +17,7 @@ How did Walmart's total weekly sales change over time, and which weeks experienc
 
 **SQL Results:**
 
-![Weekly Sales Trend Results](images/weekly_sales_trend_results.png)
+![Weekly Sales Trend Results](images/weekly_sales_trend_result.png)
 
 **Business Insight:**
 
