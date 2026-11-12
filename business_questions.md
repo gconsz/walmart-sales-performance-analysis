@@ -31,7 +31,7 @@ Do Walmart stores generate higher average weekly sales during holiday weeks comp
 
 **SQL Results:**
 
-![Holiday Sales Results](images/holiday_sales_results.png)
+![Holiday Sales Results](images/holiday_sales_result.png)
 
 **Business Insight:**
 
