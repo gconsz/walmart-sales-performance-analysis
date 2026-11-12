@@ -1,1 +1,71 @@
+#1 Which Walmart stores generate the highest sales?
+
+SELECT
+  store_id,
+  COUNT(*) AS weeks_reported,
+  ROUND(SUM(weekly_sales), 2) AS total_sales,
+  ROUND(AVG(weekly_sales), 2) AS avg_weekly_sales
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_clean`
+GROUP BY store_id
+ORDER BY total_sales DESC LIMIT 10;
+
+#2 How do total weekly sales change over time?
+SELECT
+  week_date,
+  COUNT(DISTINCT store_id) AS stores_reporting,
+  ROUND(SUM(weekly_sales), 2) AS total_weekly_sales
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_clean`
+GROUP BY week_date
+ORDER BY week_date;
+
+#3 Do holiday weeks generate higher sales?
+SELECT
+  CASE
+    WHEN is_holiday THEN 'Holiday'
+    ELSE 'Non-Holiday'
+  END AS week_type,
+  COUNT(*) AS store_week_records,
+  ROUND(AVG(weekly_sales), 2) AS avg_weekly_sales,
+  ROUND(SUM(weekly_sales), 2) AS total_sales
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_clean`
+WHERE is_holiday IS NOT NULL
+GROUP BY week_type
+ORDER BY avg_weekly_sales DESC;
+
+#4 Which Walmart stores experience the greatest sales fluctuations?
+SELECT
+  store_id,
+  ROUND(AVG(weekly_sales), 2) AS avg_sales,
+  ROUND(STDDEV_SAMP(weekly_sales), 2)
+    AS sales_stddev,
+  ROUND(
+    SAFE_DIVIDE(
+      STDDEV_SAMP(weekly_sales),
+      AVG(weekly_sales)
+    ) * 100, 2
+  ) AS coefficient_of_variation_pct
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_clean`
+GROUP BY store_id
+HAVING COUNT(*) > 1
+ORDER BY coefficient_of_variation_pct DESC;
+
+#5 Which months and years have the highest sales?
+
+SELECT
+  sales_year,
+  sales_month,
+  DATE(sales_year, sales_month, 1) AS month,
+  COUNT(DISTINCT week_date) AS weeks_reported,
+  ROUND(SUM(weekly_sales), 2) AS total_sales,
+  ROUND(AVG(weekly_sales), 2)
+    AS avg_sales_per_store_week
+FROM
+  `smart-rope-473422-t2.Walmart.walmart_clean`
+GROUP BY sales_year, sales_month
+ORDER BY sales_year, sales_month;
+
 
