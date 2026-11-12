@@ -6,5 +6,5 @@ between February 2010 and October 2012?
 
 **SQL Results:**
 
-![Store Performance Results](../images/store_performance_results.png)
+![Store Performance Results](images/store_performance_results.png)
 
