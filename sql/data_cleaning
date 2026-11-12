@@ -1,6 +1,5 @@
 SELECT * FROM `smart-rope-473422-t2.Walmart.walmart_raw` LIMIT 1000
 
-
 SELECT
   COUNT(*) AS total_rows
 FROM
@@ -121,4 +120,3 @@ SELECT
   EXTRACT(MONTH FROM week_date) AS sales_month,
   DATE_TRUNC(week_date, MONTH) AS month_start
 FROM cleaned;
-
